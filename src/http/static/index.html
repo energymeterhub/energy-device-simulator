@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Energy Device Simulator</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="container">
+        <header class="header">
+          <div class="header-brand">
+            <svg
+              class="brand-mark"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 56 56"
+              fill="none"
+              aria-hidden="true"
+            >
+              <g transform="translate(4,4) scale(1.2)">
+                <path
+                  d="M20 3L33 10.5V25.5L20 33L7 25.5V10.5L20 3Z"
+                  stroke="#60A5FA"
+                  stroke-width="2.2"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M14 14V22M26 14V22"
+                  stroke="#F8FAFC"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M14 18H26"
+                  stroke="#F8FAFC"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M20 22V26"
+                  stroke="#60A5FA"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                />
+              </g>
+            </svg>
+            <div class="header-copy">
+              <p class="eyebrow">Protocol Output Console</p>
+              <h1>Energy Device Simulator</h1>
+              <p>Switch profiles and inspect the live protocol output.</p>
+            </div>
+          </div>
+
+          <div class="header-actions">
+            <span id="connection-pill" class="status-pill">Loading</span>
+            <button id="refresh-button" class="button button-primary" type="button">
+              Refresh
+            </button>
+          </div>
+        </header>
+
+        <nav class="tabs" aria-label="Simulator sections">
+          <a class="tab-link is-active" href="#devices">Profiles</a>
+          <a class="tab-link" href="#overview">Overview</a>
+          <a class="tab-link" href="#output">Output</a>
+        </nav>
+
+        <main class="content">
+          <section id="devices" class="panel panel-spacious">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Built-in Devices</p>
+                <h2>Profiles</h2>
+              </div>
+              <p class="section-copy">Pick a source device.</p>
+            </div>
+            <div id="profile-grid" class="profile-grid"></div>
+          </section>
+
+          <section id="overview" class="overview-grid">
+            <article class="panel summary-panel">
+              <div class="device-heading">
+                <div id="device-icon" class="device-icon" aria-hidden="true"></div>
+                <div class="device-copy">
+                  <p class="eyebrow">Active Device</p>
+                  <h2 id="device-title">No device selected</h2>
+                  <p id="device-description" class="summary-copy">
+                    Waiting for the simulator to report an active profile.
+                  </p>
+                </div>
+              </div>
+              <div id="device-badges" class="badge-row"></div>
+              <ul id="device-notes" class="note-list"></ul>
+            </article>
+
+            <article class="panel summary-panel">
+              <div class="section-head section-head-compact">
+                <div>
+                  <p class="eyebrow">Connection</p>
+                  <h2>Status</h2>
+                </div>
+              </div>
+              <div id="connection-grid" class="info-grid"></div>
+              <div class="console-note">
+                <strong>Terminal debug</strong>
+                <span>Detailed requests stay in the terminal.</span>
+              </div>
+              <p id="activity-line" class="activity-line">Waiting for protocol traffic.</p>
+            </article>
+          </section>
+
+          <section id="output" class="panel protocol-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Protocol Output</p>
+                <h2 id="protocol-title">Waiting for data</h2>
+              </div>
+              <p id="protocol-summary" class="section-copy">Output preview will appear here.</p>
+            </div>
+            <div id="protocol-sections" class="protocol-sections"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

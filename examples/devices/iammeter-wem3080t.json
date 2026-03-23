@@ -1,0 +1,10 @@
+{
+  "scenarios": [],
+  "device": {
+    "id": "iammeter-1",
+    "profile": "iammeter-wem3080t",
+    "name": "IAMMETER WEM3080T",
+    "host": "0.0.0.0",
+    "port": 502
+  }
+}

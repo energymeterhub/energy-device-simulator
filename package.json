@@ -1,0 +1,43 @@
+{
+  "name": "energy-device-simulator",
+  "version": "0.4.0",
+  "description": "Protocol-focused simulator for IAMMETER WEM3080T Modbus TCP and Shelly 3EM local HTTP output.",
+  "license": "MIT",
+  "keywords": [
+    "energy",
+    "modbus",
+    "shelly",
+    "simulator",
+    "typescript"
+  ],
+  "homepage": "https://github.com/energymeterhub/energy-device-simulator#readme",
+  "bugs": {
+    "url": "https://github.com/energymeterhub/energy-device-simulator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/energymeterhub/energy-device-simulator.git"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
+    "start:iammeter": "node --experimental-strip-types src/cli.ts start iammeter-wem3080t",
+    "start:iammeter:dev": "node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
+    "start:shelly": "node --experimental-strip-types src/cli.ts start shelly-3em",
+    "read:meter": "node --experimental-strip-types src/cli.ts read-meter",
+    "dev": "node --watch --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "validate": "node --experimental-strip-types src/cli.ts validate",
+    "validate:iammeter": "node --experimental-strip-types src/cli.ts validate iammeter-wem3080t",
+    "validate:iammeter:dev": "node --experimental-strip-types src/cli.ts validate examples/devices/iammeter-wem3080t.dev.json",
+    "validate:shelly": "node --experimental-strip-types src/cli.ts validate shelly-3em"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}

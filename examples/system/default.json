@@ -1,0 +1,8 @@
+{
+  "behaviorTickMs": 2000,
+  "controlApi": {
+    "enabled": true,
+    "host": "127.0.0.1",
+    "port": 5092
+  }
+}

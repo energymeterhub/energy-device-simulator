@@ -1,0 +1,10 @@
+{
+  "scenarios": [],
+  "device": {
+    "id": "shelly-3em-1",
+    "profile": "shelly-3em",
+    "name": "Shelly 3EM",
+    "host": "0.0.0.0",
+    "port": 18080
+  }
+}
