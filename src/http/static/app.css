@@ -169,7 +169,7 @@ a {
   background: rgba(96, 165, 250, 0.18);
 }
 
-.status-pill[data-transport="shelly-gen1-http"] {
+.status-pill[data-transport="shelly-rpc-http"] {
   background: rgba(14, 122, 109, 0.22);
 }
 

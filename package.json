@@ -1,7 +1,7 @@
 {
   "name": "energy-device-simulator",
   "version": "0.4.0",
-  "description": "Protocol-focused simulator for IAMMETER WEM3080T Modbus TCP and Shelly 3EM local HTTP output.",
+  "description": "Protocol-focused simulator for IAMMETER WEM3080T Modbus TCP and Shelly Pro 3EM RPC HTTP output.",
   "license": "MIT",
   "keywords": [
     "energy",

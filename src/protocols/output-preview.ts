@@ -1,13 +1,10 @@
 import type { DeviceRuntime } from '../core/device-runtime.ts';
 import { getBuiltinMeterProfile } from '../clients/meter-reader.ts';
 import {
-  buildShellyEmeterReading,
-  buildShellyIdentityPayload,
-  buildShellyRelayPayload,
-  buildShellySettingsEmeterPayload,
-  buildShellySettingsPayload,
-  buildShellyStatusPayload
-} from './shelly-gen1.ts';
+  buildShellyPro3emRpcEmDataStatus,
+  buildShellyPro3emRpcEmStatus,
+  buildShellyRpcEndpointSummary
+} from './shelly-pro3em-rpc.ts';
 import type {
   DeviceProfileMetadata,
   ProtocolPreview,
@@ -155,99 +152,68 @@ function buildShellyPreview(
 ): ProtocolPreview {
   const host = resolveDemoHost(device);
   const baseUrl = `http://${host}:${device.listenPort}`;
+  const phaseSummary = buildShellyRpcEndpointSummary(device);
 
   return {
-    title: 'Shelly Gen1 HTTP Output',
-    summary: 'This device exposes Shelly 3EM-style local HTTP payloads. Focus on the JSON returned by the public device endpoints.',
+    title: 'Shelly Pro 3EM RPC Output',
+    summary: 'This device exposes the Shelly Pro 3EM local RPC payloads. Focus on the JSON returned by the real-time EM and cumulative EMData endpoints.',
     transport: device.transport,
     connection: buildConnectionRows(device, profile),
     sections: [
       {
         id: 'endpoint-map',
         title: 'Primary Endpoints',
-        description: 'These are the payloads end users usually care about when integrating with a Shelly 3EM.',
+        description: 'These are the two RPC endpoints most integrations need for Shelly Pro 3EM in default triphase mode.',
         kind: 'table',
         rows: [
-          { label: 'GET /shelly', value: `${baseUrl}/shelly`, note: 'device identity' },
-          { label: 'GET /settings', value: `${baseUrl}/settings`, note: 'device settings' },
-          { label: 'GET /status', value: `${baseUrl}/status`, note: 'aggregate live state' },
-          { label: 'GET /emeter/0', value: `${baseUrl}/emeter/0`, note: 'phase A live meter' },
-          { label: 'GET /emeter/1', value: `${baseUrl}/emeter/1`, note: 'phase B live meter' },
-          { label: 'GET /emeter/2', value: `${baseUrl}/emeter/2`, note: 'phase C live meter' },
-          { label: 'GET /relay/0', value: `${baseUrl}/relay/0`, note: 'relay state' }
+          { label: 'GET /rpc/EM.GetStatus?id=0', value: `${baseUrl}/rpc/EM.GetStatus?id=0`, note: 'instantaneous three-phase values' },
+          { label: 'GET /rpc/EMData.GetStatus?id=0', value: `${baseUrl}/rpc/EMData.GetStatus?id=0`, note: 'cumulative import/export energy' }
         ]
       },
       {
-        id: 'status',
-        title: 'GET /status',
-        description: 'Combined live payload used by many dashboard integrations.',
+        id: 'em-status',
+        title: 'GET /rpc/EM.GetStatus?id=0',
+        description: 'Real-time voltage, current, and active power for the three phases.',
         kind: 'json',
-        endpoint: `${baseUrl}/status`,
+        endpoint: `${baseUrl}/rpc/EM.GetStatus?id=0`,
         method: 'GET',
-        payload: buildShellyStatusPayload(device)
+        payload: buildShellyPro3emRpcEmStatus(device)
       },
       {
-        id: 'emeters',
-        title: 'Per-phase Meter Payloads',
-        description: 'Each phase can also be queried individually through its own endpoint.',
+        id: 'emdata-status',
+        title: 'GET /rpc/EMData.GetStatus?id=0',
+        description: 'Cumulative forward and reverse energy counters for each phase and the total.',
+        kind: 'json',
+        endpoint: `${baseUrl}/rpc/EMData.GetStatus?id=0`,
+        method: 'GET',
+        payload: buildShellyPro3emRpcEmDataStatus(device)
+      },
+      {
+        id: 'phase-summary',
+        title: 'Per-phase Snapshot',
+        description: 'Quick view of the values that are split across the EM and EMData RPC payloads.',
         kind: 'table',
-        rows: [0, 1, 2].map((index) => {
-          const reading = buildShellyEmeterReading(device, index);
+        rows: phaseSummary.map((reading, index) => {
           return {
-            label: `/emeter/${index}`,
-            value: `${reading.power} W · ${reading.voltage} V`,
-            note: `${reading.current} A · pf ${reading.pf}`
+            label: `Phase ${String.fromCharCode(65 + index)}`,
+            value: `${reading.activePower} W · ${reading.voltage} V`,
+            note: `${reading.current} A · import ${reading.forwardEnergyWh} Wh · export ${reading.reverseEnergyWh} Wh`
           };
         })
-      },
-      {
-        id: 'relay',
-        title: 'GET /relay/0',
-        kind: 'json',
-        endpoint: `${baseUrl}/relay/0`,
-        method: 'GET',
-        payload: buildShellyRelayPayload(device)
-      },
-      {
-        id: 'settings-emeter',
-        title: 'GET /settings/emeter/{index}',
-        description: 'Per-phase configuration payload shape.',
-        kind: 'json',
-        endpoint: `${baseUrl}/settings/emeter/0`,
-        method: 'GET',
-        payload: buildShellySettingsEmeterPayload(0)
-      },
-      {
-        id: 'identity',
-        title: 'GET /shelly',
-        kind: 'json',
-        endpoint: `${baseUrl}/shelly`,
-        method: 'GET',
-        payload: buildShellyIdentityPayload(device)
-      },
-      {
-        id: 'settings',
-        title: 'GET /settings',
-        kind: 'json',
-        endpoint: `${baseUrl}/settings`,
-        method: 'GET',
-        payload: buildShellySettingsPayload(device)
       },
       {
         id: 'debug-hints',
         title: 'Console Debug',
         kind: 'text',
         lines: [
-          `curl -s ${baseUrl}/status | jq`,
-          `curl -s ${baseUrl}/emeter/0 | jq`,
-          `curl -s '${baseUrl}/relay/0?turn=off' | jq`
+          `curl -s "${baseUrl}/rpc/EM.GetStatus?id=0" | jq`,
+          `curl -s "${baseUrl}/rpc/EMData.GetStatus?id=0" | jq`
         ]
       }
     ],
     debugHints: [
-      `curl -s ${baseUrl}/status | jq`,
-      `curl -s ${baseUrl}/emeter/0 | jq`,
-      `curl -s '${baseUrl}/relay/0?turn=off' | jq`
+      `curl -s "${baseUrl}/rpc/EM.GetStatus?id=0" | jq`,
+      `curl -s "${baseUrl}/rpc/EMData.GetStatus?id=0" | jq`
     ]
   };
 }
@@ -260,7 +226,7 @@ export function buildProtocolPreview(
     return null;
   }
 
-  if (device.transport === 'shelly-gen1-http') {
+  if (device.transport === 'shelly-rpc-http') {
     return buildShellyPreview(device, profile);
   }
 

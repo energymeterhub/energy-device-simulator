@@ -5,7 +5,7 @@ import {
 import { BehaviorEngine } from '../core/behavior-engine.ts';
 import { DeviceRuntime } from '../core/device-runtime.ts';
 import { ControlServer } from '../http/control-server.ts';
-import { ShellyGen1HttpServer } from '../http/shelly-server.ts';
+import { ShellyRpcHttpServer } from '../http/shelly-server.ts';
 import { ModbusTcpServer } from '../modbus/server.ts';
 import { getBuiltinProfile, listBuiltinProfiles } from '../profiles/builtin.ts';
 import { buildProtocolPreview } from '../protocols/output-preview.ts';
@@ -29,7 +29,7 @@ interface DeviceListenerGroup {
 
 interface ShellyListener {
   device: DeviceRuntime;
-  server: ShellyGen1HttpServer;
+  server: ShellyRpcHttpServer;
 }
 
 interface SwitchDeviceOptions {
@@ -236,11 +236,11 @@ export class SimulatorApp {
     const listeners: ShellyListener[] = [];
 
     for (const device of devices.values()) {
-      if (device.transport !== 'shelly-gen1-http') {
+      if (device.transport !== 'shelly-rpc-http') {
         continue;
       }
 
-      const server = new ShellyGen1HttpServer({
+      const server = new ShellyRpcHttpServer({
         device,
         host: device.host,
         port: device.port

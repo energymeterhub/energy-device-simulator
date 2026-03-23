@@ -2,7 +2,7 @@ export type RegisterType = 'uint16' | 'int16' | 'uint32' | 'int32' | 'float32';
 
 export type RegisterBankName = 'holding' | 'input';
 
-export type DeviceTransport = 'modbus-tcp' | 'shelly-gen1-http';
+export type DeviceTransport = 'modbus-tcp' | 'shelly-rpc-http';
 
 export type TrafficProtocol = 'modbus-tcp' | 'http';
 

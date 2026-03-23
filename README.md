@@ -5,7 +5,7 @@
 Current built-in devices:
 
 - `IAMMETER WEM3080T` over Modbus TCP
-- `Shelly 3EM` over Shelly Gen1 local HTTP
+- `Shelly Pro 3EM` over Shelly local RPC HTTP
 
 The project ships with:
 
@@ -65,7 +65,7 @@ Shelly startup:
 npm run start:shelly
 ```
 
-This starts `Shelly 3EM` on port `18080`.
+This starts `Shelly Pro 3EM` on port `18080`.
 
 ## CLI
 
@@ -118,8 +118,8 @@ Current profiles:
 
 - `IAMMETER WEM3080T`
   Raw Modbus TCP holding registers at `0-64`, with changing phase power and total power.
-- `Shelly 3EM`
-  Shelly Gen1 local HTTP endpoints such as `/shelly`, `/settings`, `/status`, `/emeter/{index}`, `/relay/0`, and `/reset_data`.
+- `Shelly Pro 3EM`
+  Shelly RPC HTTP endpoints `/rpc/EM.GetStatus?id=0` and `/rpc/EMData.GetStatus?id=0`.
 
 ## Device Selection State
 
@@ -195,4 +195,4 @@ npm run validate:shelly
 
 ## Reference Notes
 
-- Shelly 3EM protocol review: [`docs/shelly-3em-protocol-review.md`](docs/shelly-3em-protocol-review.md)
+- Shelly Pro 3EM protocol review: [`docs/shelly-3em-protocol-review.md`](docs/shelly-3em-protocol-review.md)

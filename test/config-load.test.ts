@@ -55,7 +55,7 @@ test('normalizeConfig resolves the IAMMETER builtin profile and scenario definit
   assert.equal(config.scenarios[0]?.id, 'night-idle');
 });
 
-test('normalizeConfig resolves the Shelly 3EM builtin profile with HTTP transport', () => {
+test('normalizeConfig resolves the Shelly Pro 3EM builtin profile with RPC transport', () => {
   const config = normalizeConfig({
     devices: [
       {
@@ -68,8 +68,8 @@ test('normalizeConfig resolves the Shelly 3EM builtin profile with HTTP transpor
 
   assert.equal(config.devices.length, 1);
   assert.equal(config.devices[0]?.profileId, 'shelly-3em');
-  assert.equal(config.devices[0]?.transport, 'shelly-gen1-http');
-  assert.equal(config.devices[0]?.model, 'SHEM-3');
+  assert.equal(config.devices[0]?.transport, 'shelly-rpc-http');
+  assert.equal(config.devices[0]?.model, 'Shelly Pro 3EM');
   assert.equal(config.devices[0]?.port, 18080);
 });
 
@@ -115,6 +115,6 @@ test('loadConfig reads the Shelly example device config', async () => {
   assert.equal(config.controlApi.port, 5092);
   assert.equal(config.devices.length, 1);
   assert.equal(config.devices[0]?.profileId, 'shelly-3em');
-  assert.equal(config.devices[0]?.transport, 'shelly-gen1-http');
+  assert.equal(config.devices[0]?.transport, 'shelly-rpc-http');
   assert.equal(config.devices[0]?.port, 18080);
 });

@@ -151,25 +151,25 @@ const builtinProfiles: DeviceProfileDefinition[] = [
   },
   {
     id: 'shelly-3em',
-    title: 'Shelly 3EM',
+    title: 'Shelly Pro 3EM',
     description:
-      'Shelly Gen1-style local HTTP profile for Shelly 3EM, with `/shelly`, `/settings`, `/status`, `/emeter/{index}` and relay endpoints.',
+      'Shelly Pro 3EM local RPC profile using `/rpc/EM.GetStatus?id=0` and `/rpc/EMData.GetStatus?id=0` for three-phase data.',
     manufacturerId: 'shelly',
     manufacturerName: 'Shelly',
-    productId: 'shem-3',
-    productName: 'Shelly 3EM',
-    transport: 'shelly-gen1-http',
+    productId: 'shelly-pro-3em',
+    productName: 'Shelly Pro 3EM',
+    transport: 'shelly-rpc-http',
     defaultPort: 80,
     compatibility: 'vendor-compat',
     notes: [
-      'Local API transport is HTTP, not Modbus TCP.',
+      'Local API transport is HTTP RPC, not Modbus TCP.',
       'The default real-device local API port is TCP 80; the bundled example uses 18080 to avoid privileged-port issues in development.',
-      'The simulator exposes Gen1-style energy meter endpoints for three phases and a single relay.'
+      'The simulator exposes the Shelly Pro 3EM RPC endpoints `/rpc/EM.GetStatus?id=0` and `/rpc/EMData.GetStatus?id=0`.'
     ],
     device: {
       kind: 'meter',
-      model: 'SHEM-3',
-      transport: 'shelly-gen1-http',
+      model: 'Shelly Pro 3EM',
+      transport: 'shelly-rpc-http',
       unitId: 1,
       port: 18080,
       registers: cloneRegisters(shelly3emRegisters),

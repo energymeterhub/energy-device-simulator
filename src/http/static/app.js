@@ -60,8 +60,8 @@ function formatTransport(value) {
     return 'Modbus TCP';
   }
 
-  if (value === 'shelly-gen1-http') {
-    return 'Shelly Gen1 HTTP';
+  if (value === 'shelly-rpc-http') {
+    return 'Shelly RPC HTTP';
   }
 
   return value || 'Unknown';
@@ -78,7 +78,7 @@ function getIconTone(transport) {
     return 'is-modbus';
   }
 
-  if (transport === 'shelly-gen1-http') {
+  if (transport === 'shelly-rpc-http') {
     return 'is-http';
   }
 
@@ -96,7 +96,7 @@ function getProtocolIconMarkup(transport) {
     `;
   }
 
-  if (transport === 'shelly-gen1-http') {
+  if (transport === 'shelly-rpc-http') {
     return `
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M6 10.5C9.3 7.1 14.7 7.1 18 10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>

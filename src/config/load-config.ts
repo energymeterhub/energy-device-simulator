@@ -87,11 +87,15 @@ function normalizeTransport(value: unknown, fallback: DeviceTransport): DeviceTr
     return fallback;
   }
 
-  if (value === 'modbus-tcp' || value === 'shelly-gen1-http') {
+  if (value === 'modbus-tcp' || value === 'shelly-rpc-http') {
     return value;
   }
 
-  throw new Error('Device transport must be "modbus-tcp" or "shelly-gen1-http"');
+  if (value === 'shelly-gen1-http') {
+    return 'shelly-rpc-http';
+  }
+
+  throw new Error('Device transport must be "modbus-tcp" or "shelly-rpc-http"');
 }
 
 function normalizeRegisters(rawRegisters: unknown): DeviceRegistersDefinition {

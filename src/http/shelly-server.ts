@@ -4,15 +4,9 @@ import type { AddressInfo } from 'node:net';
 import type { DeviceRuntime } from '../core/device-runtime.ts';
 import type { TrafficLogEntry } from '../types.ts';
 import {
-  buildShellyEmeterReading,
-  buildShellyIdentityPayload,
-  buildShellyRelayPayload,
-  buildShellySettingsEmeterPayload,
-  buildShellySettingsPayload,
-  buildShellySettingsRelayPayload,
-  buildShellyStatusPayload,
-  resetShellyEnergyTotals
-} from '../protocols/shelly-gen1.ts';
+  buildShellyPro3emRpcEmDataStatus,
+  buildShellyPro3emRpcEmStatus
+} from '../protocols/shelly-pro3em-rpc.ts';
 
 interface ShellyServerOptions {
   device: DeviceRuntime;
@@ -32,7 +26,11 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export class ShellyGen1HttpServer {
+function isRpcInstanceZero(url: URL): boolean {
+  return url.searchParams.get('id') === '0';
+}
+
+export class ShellyRpcHttpServer {
   device: DeviceRuntime;
 
   host: string;
@@ -131,101 +129,25 @@ export class ShellyGen1HttpServer {
     });
   }
 
-  private setRelayState(isOn: boolean): void {
-    this.device.setEntryValue('holding', 100, isOn ? 1 : 0, {
-      force: true
-    });
-  }
-
   async handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const baseUrl = `http://${request.headers.host ?? '127.0.0.1'}`;
     const url = new URL(request.url ?? '/', baseUrl);
 
-    if (request.method !== 'GET' && request.method !== 'POST') {
+    if (request.method !== 'GET') {
       this.logTraffic(request, 'invalid', 'Unsupported method');
       json(response, 405, { error: 'Method not allowed' });
       return;
     }
 
-    if (request.method === 'GET' && url.pathname === '/shelly') {
+    if (url.pathname === '/rpc/EM.GetStatus' && isRpcInstanceZero(url)) {
       this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellyIdentityPayload(this.device));
+      json(response, 200, buildShellyPro3emRpcEmStatus(this.device));
       return;
     }
 
-    if (request.method === 'GET' && url.pathname === '/settings') {
+    if (url.pathname === '/rpc/EMData.GetStatus' && isRpcInstanceZero(url)) {
       this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellySettingsPayload(this.device));
-      return;
-    }
-
-    if (request.method === 'GET' && url.pathname === '/settings/login') {
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellySettingsPayload(this.device).login);
-      return;
-    }
-
-    if (request.method === 'GET' && url.pathname === '/settings/relay/0') {
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellySettingsRelayPayload(this.device));
-      return;
-    }
-
-    const emeterSettingsMatch = url.pathname.match(/^\/settings\/emeter\/(\d+)$/);
-    if (request.method === 'GET' && emeterSettingsMatch) {
-      const index = Number(emeterSettingsMatch[1]);
-      if (!Number.isInteger(index) || index < 0 || index > 2) {
-        this.logTraffic(request, 'invalid', 'Unknown emeter index');
-        json(response, 404, { error: 'Not found' });
-        return;
-      }
-
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellySettingsEmeterPayload(index));
-      return;
-    }
-
-    if (request.method === 'GET' && url.pathname === '/status') {
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellyStatusPayload(this.device));
-      return;
-    }
-
-    const emeterMatch = url.pathname.match(/^\/emeter\/(\d+)$/);
-    if (request.method === 'GET' && emeterMatch) {
-      const index = Number(emeterMatch[1]);
-      if (!Number.isInteger(index) || index < 0 || index > 2) {
-        this.logTraffic(request, 'invalid', 'Unknown emeter index');
-        json(response, 404, { error: 'Not found' });
-        return;
-      }
-
-      this.logTraffic(request, 'ok', null);
-      if (url.searchParams.has('reset_totals')) {
-        resetShellyEnergyTotals(this.device, [index as 0 | 1 | 2]);
-      }
-      json(response, 200, buildShellyEmeterReading(this.device, index));
-      return;
-    }
-
-    if (url.pathname === '/relay/0') {
-      const turn = url.searchParams.get('turn');
-      if (turn === 'on') {
-        this.setRelayState(true);
-      } else if (turn === 'off') {
-        this.setRelayState(false);
-      }
-
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, buildShellyRelayPayload(this.device));
-      return;
-    }
-
-    if ((request.method === 'POST' || request.method === 'GET') && url.pathname === '/reset_data') {
-      resetShellyEnergyTotals(this.device);
-
-      this.logTraffic(request, 'ok', null);
-      json(response, 200, { reset_data: 1 });
+      json(response, 200, buildShellyPro3emRpcEmDataStatus(this.device));
       return;
     }
 

@@ -277,7 +277,7 @@ test('simulator app serves Modbus TCP and HTTP control APIs', async (t) => {
   assert.equal(setEntryResponse.status, 200);
 });
 
-test('simulator app serves Shelly Gen1 HTTP device endpoints', async (t) => {
+test('simulator app serves Shelly Pro 3EM RPC endpoints', async (t) => {
   const app = SimulatorApp.fromConfig({
     behaviorTickMs: 2000,
     controlApi: {
@@ -292,22 +292,15 @@ test('simulator app serves Shelly Gen1 HTTP device endpoints', async (t) => {
         id: 'shelly-1',
         profileId: 'shelly-3em',
         profile: 'shelly-3em',
-        name: 'Shelly 3EM',
+        name: 'Shelly Pro 3EM',
         kind: 'meter',
-        model: 'SHEM-3',
-        transport: 'shelly-gen1-http',
+        model: 'Shelly Pro 3EM',
+        transport: 'shelly-rpc-http',
         host: '127.0.0.1',
         port: 0,
         unitId: 1,
         behaviors: [],
         registers: {
-          holding: {
-            100: {
-              type: 'uint16',
-              value: 1,
-              writable: true
-            }
-          },
           input: {
             0: { type: 'float32', value: 610.1 },
             2: { type: 'float32', value: 0.971 },
@@ -341,71 +334,35 @@ test('simulator app serves Shelly Gen1 HTTP device endpoints', async (t) => {
   const controlAddress = app.getControlApiAddress();
   assert.ok(controlAddress);
 
-  const shellyResponse = await fetch(`http://127.0.0.1:${httpPort}/shelly`);
-  assert.equal(shellyResponse.status, 200);
-  const shellyBody = (await shellyResponse.json()) as {
-    type: string;
-    auth: boolean;
-    num_meters: number;
+  const emStatusResponse = await fetch(`http://127.0.0.1:${httpPort}/rpc/EM.GetStatus?id=0`);
+  assert.equal(emStatusResponse.status, 200);
+  const emStatusBody = (await emStatusResponse.json()) as {
+    a_voltage: number;
+    b_voltage: number;
+    c_voltage: number;
+    total_act_power: number;
+    c_active_power: number;
   };
-  assert.equal(shellyBody.type, 'SHEM-3');
-  assert.equal(shellyBody.auth, false);
-  assert.equal(shellyBody.num_meters, 3);
+  assert.equal(emStatusBody.a_voltage, 230.2);
+  assert.equal(emStatusBody.b_voltage, 229.8);
+  assert.equal(emStatusBody.c_voltage, 228.6);
+  assert.ok((emStatusBody.total_act_power ?? 0) > 1000);
+  assert.equal(emStatusBody.c_active_power, 310.8);
 
-  const statusResponse = await fetch(`http://127.0.0.1:${httpPort}/status`);
-  assert.equal(statusResponse.status, 200);
-  const statusBody = (await statusResponse.json()) as {
-    relays: Array<{ ison: boolean; is_valid: boolean }>;
-    emeters: Array<{ power: number; voltage: number }>;
-    total_power: number;
+  const emDataResponse = await fetch(`http://127.0.0.1:${httpPort}/rpc/EMData.GetStatus?id=0`);
+  assert.equal(emDataResponse.status, 200);
+  const emDataBody = (await emDataResponse.json()) as {
+    a_total_act_energy: number;
+    b_total_act_energy: number;
+    c_total_act_energy: number;
+    total_act: number;
+    total_act_ret: number;
   };
-  assert.equal(statusBody.relays.length, 1);
-  assert.equal(statusBody.relays[0]?.ison, true);
-  assert.equal(statusBody.relays[0]?.is_valid, true);
-  assert.equal(statusBody.emeters.length, 3);
-  assert.ok((statusBody.total_power ?? 0) > 1000);
-
-  const settingsEmeterResponse = await fetch(`http://127.0.0.1:${httpPort}/settings/emeter/0`);
-  assert.equal(settingsEmeterResponse.status, 200);
-  const settingsEmeterBody = (await settingsEmeterResponse.json()) as {
-    appliance_type: string;
-    max_power: number;
-  };
-  assert.equal(settingsEmeterBody.appliance_type, 'General');
-  assert.equal(settingsEmeterBody.max_power, 0);
-
-  const relayResponse = await fetch(`http://127.0.0.1:${httpPort}/relay/0`);
-  assert.equal(relayResponse.status, 200);
-  const relayBody = (await relayResponse.json()) as {
-    is_valid: boolean;
-  };
-  assert.equal(relayBody.is_valid, true);
-
-  const emeterResponse = await fetch(`http://127.0.0.1:${httpPort}/emeter/1`);
-  assert.equal(emeterResponse.status, 200);
-  const emeterBody = (await emeterResponse.json()) as {
-    power: number;
-    current: number;
-    is_valid: boolean;
-  };
-  assert.ok(emeterBody.power > 0);
-  assert.ok(emeterBody.current > 0);
-  assert.equal(emeterBody.is_valid, true);
-
-  const relayOffResponse = await fetch(`http://127.0.0.1:${httpPort}/relay/0?turn=off`);
-  assert.equal(relayOffResponse.status, 200);
-  assert.equal(device.getEntryValue('holding', 100), 0);
-
-  const resetDataResponse = await fetch(`http://127.0.0.1:${httpPort}/reset_data`, {
-    method: 'POST'
-  });
-  assert.equal(resetDataResponse.status, 200);
-  const resetDataBody = (await resetDataResponse.json()) as {
-    reset_data: number;
-  };
-  assert.equal(resetDataBody.reset_data, 1);
-  assert.equal(device.getEntryValue('input', 6), 0);
-  assert.equal(device.getEntryValue('input', 28), 0);
+  assert.equal(emDataBody.a_total_act_energy, 12034.5);
+  assert.equal(emDataBody.b_total_act_energy, 9234.1);
+  assert.equal(emDataBody.c_total_act_energy, 8345.2);
+  assert.ok((emDataBody.total_act ?? 0) > 29000);
+  assert.ok((emDataBody.total_act_ret ?? 0) > 10);
 
   const dashboardResponse = await fetch(`http://127.0.0.1:${controlAddress.port}/api/dashboard`);
   assert.equal(dashboardResponse.status, 200);
@@ -415,12 +372,12 @@ test('simulator app serves Shelly Gen1 HTTP device endpoints', async (t) => {
     traffic: Array<{ protocol: string; method: string | null; requestTarget: string | null }>;
   };
   assert.equal(dashboardBody.device?.id, 'shelly-1');
-  assert.equal(dashboardBody.device?.transport, 'shelly-gen1-http');
-  assert.equal(dashboardBody.protocolPreview?.title, 'Shelly Gen1 HTTP Output');
-  assert.ok(dashboardBody.protocolPreview?.sections.some((section) => section.id === 'status'));
+  assert.equal(dashboardBody.device?.transport, 'shelly-rpc-http');
+  assert.equal(dashboardBody.protocolPreview?.title, 'Shelly Pro 3EM RPC Output');
+  assert.ok(dashboardBody.protocolPreview?.sections.some((section) => section.id === 'em-status'));
   assert.ok(
     dashboardBody.traffic.some(
-      (entry) => entry.protocol === 'http' && entry.requestTarget === '/status'
+      (entry) => entry.protocol === 'http' && entry.requestTarget === '/rpc/EM.GetStatus?id=0'
     )
   );
 
@@ -440,7 +397,7 @@ test('simulator app serves Shelly Gen1 HTTP device endpoints', async (t) => {
     device: { profileId: string | null; transport: string; configuredPort: number };
   };
   assert.equal(switchBody.device.profileId, 'shelly-3em');
-  assert.equal(switchBody.device.transport, 'shelly-gen1-http');
+  assert.equal(switchBody.device.transport, 'shelly-rpc-http');
   assert.ok(switchBody.device.configuredPort > 0);
 });
 
@@ -500,7 +457,7 @@ test('simulator app persists the selected profile across restarts', async (t) =>
   const secondApp = SimulatorApp.fromConfig(baseConfig, { stateFilePath });
   const restoredDevice = secondApp.getPrimaryDeviceSummary();
   assert.equal(restoredDevice?.profileId, 'shelly-3em');
-  assert.equal(restoredDevice?.transport, 'shelly-gen1-http');
+  assert.equal(restoredDevice?.transport, 'shelly-rpc-http');
   assert.notEqual(restoredDevice?.configuredPort, switchedPort);
   assert.equal(restoredDevice?.configuredPort, 18080);
 });
