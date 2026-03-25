@@ -1,24 +1,39 @@
 # Energy Device Simulator
 
-`Energy Device Simulator` is a TypeScript protocol simulator focused on what integrations actually consume from a device.
+An open-source project by [EnergyMeterHub](https://www.energymeterhub.com), built to help developers test energy-meter integrations locally without needing physical hardware.
 
-Current built-in devices:
+`Energy Device Simulator` emulates the protocol output that real devices expose, so you can validate polling, decoding, dashboards, and troubleshooting flows against a predictable local target.
 
-- `IAMMETER WEM3080T` over Modbus TCP
-- `Shelly Pro 3EM` over Shelly local RPC HTTP
+Current built-in profiles:
 
-The project ships with:
+| Profile | Transport | Default dev port | Use case |
+| --- | --- | ---: | --- |
+| `IAMMETER WEM3080T` | Modbus TCP | `1502` via `npm start` | Test raw register polling and IAMMETER-compatible integrations |
+| `Shelly Pro 3EM` | Shelly local RPC HTTP | `18080` | Test local RPC consumers and payload handling |
 
-- a protocol-oriented local web console
-- a small HTTP control API
-- built-in device profiles and example configs
-- deterministic tests using `node:test`
+## Why this project exists
 
-## Requirements
+- develop and debug integrations without a live meter on your desk
+- reproduce vendor-style protocol output locally
+- switch quickly between built-in device profiles from a small web console
+- inspect connection details, payload previews, and live protocol behavior
+- automate test or demo setups with a local HTTP control API
+
+## What you get
+
+- a local web console for switching profiles and inspecting protocol output
+- a small HTTP control API for discovery, mutation, and fault injection
+- built-in device profiles and JSON config examples
+- a bundled Modbus meter reader for the IAMMETER profile
+- deterministic tests with `node:test`
+
+## Quick Start
+
+Requirements:
 
 - Node.js `22.6.0` or newer
 
-## Quick Start
+Install, verify, and start the default simulator:
 
 ```bash
 npm install
@@ -27,7 +42,7 @@ npm test
 npm start
 ```
 
-`npm start` uses the non-privileged IAMMETER dev config at [`examples/devices/iammeter-wem3080t.dev.json`](examples/devices/iammeter-wem3080t.dev.json), so a fresh clone can start without root privileges.
+`npm start` uses the non-privileged IAMMETER dev config at [`examples/devices/iammeter-wem3080t.dev.json`](examples/devices/iammeter-wem3080t.dev.json), so a fresh clone can run without needing port `502`.
 
 Then open:
 
@@ -35,11 +50,24 @@ Then open:
 http://127.0.0.1:5092/
 ```
 
-The UI is intentionally small:
+What you will see right away:
 
-- switch between built-in devices
-- inspect the live protocol output
-- keep low-level request logs in the terminal
+- built-in profile cards for IAMMETER and Shelly
+- the active device summary and connection details
+- a live protocol output preview
+- terminal-side request logs for low-level debugging
+
+## Screenshots
+
+README screenshots live under [`docs/readme`](docs/readme) so they stay versioned with the repo, remain reusable outside GitHub, and stay separate from the simulator's runtime static assets.
+
+Desktop overview of the local console:
+
+![Protocol Output Console desktop view](docs/readme/console-overview.png)
+
+Mobile view of the same local UI:
+
+![Protocol Output Console mobile view](docs/readme/console-mobile.png)
 
 ## Startup Modes
 
@@ -192,6 +220,10 @@ npm run validate:iammeter
 npm run validate:iammeter:dev
 npm run validate:shelly
 ```
+
+## Project Origin
+
+This repository is an official open-source project from [EnergyMeterHub](https://www.energymeterhub.com), the site that publishes practical smart-energy guides, device research, and related tooling.
 
 ## Reference Notes
 
