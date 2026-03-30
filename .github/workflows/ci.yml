@@ -31,6 +31,7 @@ jobs:
           npm run validate
           npm run validate:iammeter
           npm run validate:iammeter:dev
+          npm run validate:fronius
           npm run validate:shelly
 
       - name: Run tests

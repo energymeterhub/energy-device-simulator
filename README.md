@@ -25,7 +25,6 @@ Current built-in profiles:
 - a local web console for switching profiles and inspecting protocol output
 - a small HTTP control API for discovery, mutation, and fault injection
 - built-in device profiles and JSON config examples
-- a bundled Modbus meter reader for the IAMMETER profile
 - a bundled Modbus meter reader for IAMMETER and Fronius SunSpec profiles
 - deterministic tests with `node:test`
 
@@ -34,6 +33,12 @@ Current built-in profiles:
 Requirements:
 
 - Node.js `22.6.0` or newer
+
+Run directly from npm without cloning:
+
+```bash
+npx energy-device-simulator start iammeter-wem3080t
+```
 
 Install, verify, and start the default simulator:
 
@@ -58,6 +63,61 @@ What you will see right away:
 - the active device summary and connection details
 - a live protocol output preview
 - terminal-side request logs for low-level debugging
+
+## Docker
+
+Build the image locally:
+
+```bash
+docker build -t energy-device-simulator:local .
+```
+
+Pull the published image from Docker Hub:
+
+```bash
+docker pull energymeterhub/energy-device-simulator:latest
+```
+
+Run the default IAMMETER container with host-accessible control API:
+
+```bash
+docker run --rm -p 1502:1502 -p 5092:5092 energy-device-simulator:local
+```
+
+Then open `http://127.0.0.1:5092/`.
+
+Run other bundled profiles by overriding the command:
+
+```bash
+docker run --rm -p 1503:1503 -p 5092:5092 energy-device-simulator:local start examples/devices/fronius-sunspec.json --system examples/system/docker.json
+docker run --rm -p 18080:18080 -p 5092:5092 energy-device-simulator:local start shelly-3em --system examples/system/docker.json
+```
+
+The Docker image uses [`examples/system/docker.json`](examples/system/docker.json) so the control API listens on `0.0.0.0` inside the container.
+
+Container images are published to Docker Hub at `energymeterhub/energy-device-simulator`.
+
+## Release Automation
+
+GitHub Actions now publishes npm and Docker Hub releases whenever you push a version tag such as `v0.4.1`.
+
+Required repository secrets:
+
+- `NPM_TOKEN`
+  An npm automation or granular access token that can publish the package.
+- `DOCKERHUB_USERNAME`
+  The Docker Hub account or org name.
+- `DOCKERHUB_TOKEN`
+  A Docker Hub access token with push access to `energymeterhub/energy-device-simulator`.
+
+Release flow:
+
+```bash
+npm version patch
+git push origin main --follow-tags
+```
+
+The release workflow verifies the tag matches `package.json`, runs typecheck/tests/config validation, publishes the npm package, pushes Docker tags, and updates the Docker Hub description from [`docs/dockerhub/README.md`](docs/dockerhub/README.md).
 
 ## Screenshots
 
@@ -106,6 +166,15 @@ npm run start:fronius
 This starts `Fronius SunSpec Inverter` on port `502` using the built-in SunSpec profile. The example config at `examples/devices/fronius-sunspec.json` uses port `1503` if you want a non-privileged local target.
 
 ## CLI
+
+```bash
+npx energy-device-simulator start fronius-sunspec
+npx energy-device-simulator start shelly-3em
+npx energy-device-simulator validate fronius-sunspec
+npx energy-device-simulator read-meter --host 127.0.0.1 --port 1503 --unit 1 --profile fronius-sunspec
+```
+
+Direct source-based commands while developing the repo:
 
 ```bash
 node --experimental-strip-types src/cli.ts start

@@ -1,0 +1,9 @@
+.git
+.github
+.runtime
+docs
+node_modules
+test
+.DS_Store
+npm-debug.log*
+energy-device-simulator-*.tgz

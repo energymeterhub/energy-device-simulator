@@ -19,6 +19,16 @@
     "url": "git+https://github.com/energymeterhub/energy-device-simulator.git"
   },
   "type": "module",
+  "bin": {
+    "energy-device-simulator": "bin/energy-device-simulator.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
     "start:iammeter": "node --experimental-strip-types src/cli.ts start iammeter-wem3080t",
@@ -29,6 +39,7 @@
     "dev": "node --watch --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm test && npm run typecheck",
     "validate": "node --experimental-strip-types src/cli.ts validate",
     "validate:iammeter": "node --experimental-strip-types src/cli.ts validate iammeter-wem3080t",
     "validate:iammeter:dev": "node --experimental-strip-types src/cli.ts validate examples/devices/iammeter-wem3080t.dev.json",
