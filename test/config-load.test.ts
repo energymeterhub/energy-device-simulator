@@ -73,6 +73,25 @@ test('normalizeConfig resolves the Shelly Pro 3EM builtin profile with RPC trans
   assert.equal(config.devices[0]?.port, 18080);
 });
 
+test('normalizeConfig resolves the Fronius SunSpec builtin profile with Modbus transport', () => {
+  const config = normalizeConfig({
+    devices: [
+      {
+        id: 'fronius-1',
+        profile: 'fronius-sunspec',
+        host: '0.0.0.0'
+      }
+    ]
+  });
+
+  assert.equal(config.devices.length, 1);
+  assert.equal(config.devices[0]?.profileId, 'fronius-sunspec');
+  assert.equal(config.devices[0]?.transport, 'modbus-tcp');
+  assert.equal(config.devices[0]?.kind, 'inverter');
+  assert.equal(config.devices[0]?.model, 'Fronius SunSpec Inverter');
+  assert.equal(config.devices[0]?.port, 502);
+});
+
 test('loadConfig merges a shared system config with a single device file', async () => {
   const systemConfigPath = resolveSystemConfigPath();
   const deviceConfigPath = path.resolve(__dirname, '../examples/devices/iammeter-wem3080t.json');
@@ -117,4 +136,20 @@ test('loadConfig reads the Shelly example device config', async () => {
   assert.equal(config.devices[0]?.profileId, 'shelly-3em');
   assert.equal(config.devices[0]?.transport, 'shelly-rpc-http');
   assert.equal(config.devices[0]?.port, 18080);
+});
+
+test('loadConfig reads the Fronius SunSpec example device config', async () => {
+  const systemConfigPath = resolveSystemConfigPath();
+  const deviceConfigPath = path.resolve(__dirname, '../examples/devices/fronius-sunspec.json');
+
+  const config = await loadConfig(deviceConfigPath, {
+    systemConfigPath
+  });
+
+  assert.equal(config.behaviorTickMs, 2000);
+  assert.equal(config.controlApi.port, 5092);
+  assert.equal(config.devices.length, 1);
+  assert.equal(config.devices[0]?.profileId, 'fronius-sunspec');
+  assert.equal(config.devices[0]?.transport, 'modbus-tcp');
+  assert.equal(config.devices[0]?.port, 1503);
 });

@@ -81,7 +81,7 @@ test('profiles, scenarios, faults, and writes work end to end', async (t) => {
   };
   assert.deepEqual(
     profilesBody.profiles.map((profile) => profile.id),
-    ['iammeter-wem3080t', 'shelly-3em']
+    ['fronius-sunspec', 'iammeter-wem3080t', 'shelly-3em']
   );
 
   const scenariosResponse = await fetch(`http://127.0.0.1:${httpAddress.port}/api/scenarios`);

@@ -9,6 +9,7 @@ Current built-in profiles:
 | Profile | Transport | Default dev port | Use case |
 | --- | --- | ---: | --- |
 | `IAMMETER WEM3080T` | Modbus TCP | `1502` via `npm start` | Test raw register polling and IAMMETER-compatible integrations |
+| `Fronius SunSpec Inverter` | Modbus TCP | `1503` | Test SunSpec discovery and inverter polling against a Fronius-style layout |
 | `Shelly Pro 3EM` | Shelly local RPC HTTP | `18080` | Test local RPC consumers and payload handling |
 
 ## Why this project exists
@@ -25,6 +26,7 @@ Current built-in profiles:
 - a small HTTP control API for discovery, mutation, and fault injection
 - built-in device profiles and JSON config examples
 - a bundled Modbus meter reader for the IAMMETER profile
+- a bundled Modbus meter reader for IAMMETER and Fronius SunSpec profiles
 - deterministic tests with `node:test`
 
 ## Quick Start
@@ -95,6 +97,14 @@ npm run start:shelly
 
 This starts `Shelly Pro 3EM` on port `18080`.
 
+Fronius startup:
+
+```bash
+npm run start:fronius
+```
+
+This starts `Fronius SunSpec Inverter` on port `502` using the built-in SunSpec profile. The example config at `examples/devices/fronius-sunspec.json` uses port `1503` if you want a non-privileged local target.
+
 ## CLI
 
 ```bash
@@ -102,6 +112,7 @@ node --experimental-strip-types src/cli.ts start
 node --experimental-strip-types src/cli.ts start iammeter-wem3080t
 node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json
 node --experimental-strip-types src/cli.ts start shelly-3em
+node --experimental-strip-types src/cli.ts start fronius-sunspec
 node --experimental-strip-types src/cli.ts validate
 node --experimental-strip-types src/cli.ts read-meter --host 127.0.0.1 --port 1502 --unit 1 --profile iammeter-wem3080t
 ```
@@ -112,11 +123,13 @@ Available package scripts:
 - `npm run dev`
 - `npm run start:iammeter`
 - `npm run start:iammeter:dev`
+- `npm run start:fronius`
 - `npm run start:shelly`
 - `npm run read:meter`
 - `npm run validate`
 - `npm run validate:iammeter`
 - `npm run validate:iammeter:dev`
+- `npm run validate:fronius`
 - `npm run validate:shelly`
 - `npm run typecheck`
 - `npm test`
@@ -131,6 +144,7 @@ Device examples live under [`examples/devices`](examples/devices):
 
 - `iammeter-wem3080t.json`
 - `iammeter-wem3080t.dev.json`
+- `fronius-sunspec.json`
 - `shelly-3em.json`
 
 The simulator expects:
@@ -146,6 +160,8 @@ Current profiles:
 
 - `IAMMETER WEM3080T`
   Raw Modbus TCP holding registers at `0-64`, with changing phase power and total power.
+- `Fronius SunSpec Inverter`
+  SunSpec discovery at holding `40000`, followed by Common model `1` and three-phase inverter model `103` with scale-factor-based current, voltage, power, frequency, energy, and status fields.
 - `Shelly Pro 3EM`
   Shelly RPC HTTP endpoints `/rpc/EM.GetStatus?id=0` and `/rpc/EMData.GetStatus?id=0`.
 
@@ -188,7 +204,7 @@ UI helpers:
 
 ## Meter Reader
 
-The project includes a TypeScript Modbus TCP reader for the built-in IAMMETER profile.
+The project includes a TypeScript Modbus TCP reader for the built-in IAMMETER and Fronius SunSpec profiles.
 
 If you started the safe local config:
 
@@ -200,6 +216,12 @@ If you started the realistic IAMMETER profile on `502`:
 
 ```bash
 npm run read:meter
+```
+
+If you started the Fronius example on `1503`:
+
+```bash
+npm run read:meter -- --port 1503 --profile fronius-sunspec
 ```
 
 JSON output is also supported:
@@ -218,6 +240,7 @@ npm test
 npm run validate
 npm run validate:iammeter
 npm run validate:iammeter:dev
+npm run validate:fronius
 npm run validate:shelly
 ```
 

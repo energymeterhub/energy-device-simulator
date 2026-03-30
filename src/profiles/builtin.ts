@@ -8,6 +8,36 @@ function cloneRegisters(registers: DeviceRegistersDefinition): DeviceRegistersDe
   return structuredClone(registers);
 }
 
+function encodeAsciiRegisters(text: string, registerCount: number): number[] {
+  const normalized = text.padEnd(registerCount * 2, ' ').slice(0, registerCount * 2);
+  const words: number[] = [];
+
+  for (let index = 0; index < registerCount; index += 1) {
+    const left = normalized.charCodeAt(index * 2);
+    const right = normalized.charCodeAt(index * 2 + 1);
+    words.push((left << 8) | right);
+  }
+
+  return words;
+}
+
+function createSequentialRegisters(
+  startAddress: number,
+  words: number[],
+  prefix: string
+): Record<number, { name: string; type: 'uint16'; value: number }> {
+  return Object.fromEntries(
+    words.map((value, index) => [
+      startAddress + index,
+      {
+        name: `${prefix}_${index}`,
+        type: 'uint16' as const,
+        value
+      }
+    ])
+  );
+}
+
 const iammeterWem3080Registers: DeviceRegistersDefinition = {
   holding: {
     0: { name: 'phase_a_voltage_raw', type: 'uint16', value: 23041 },
@@ -80,7 +110,178 @@ const shelly3emRegisters: DeviceRegistersDefinition = {
   }
 };
 
+const froniusSunspecCommonBlock = new Array<number>(66).fill(0);
+encodeAsciiRegisters('Fronius', 8).forEach((word, index) => {
+  froniusSunspecCommonBlock[index] = word;
+});
+encodeAsciiRegisters('GEN24 Symo', 8).forEach((word, index) => {
+  froniusSunspecCommonBlock[8 + index] = word;
+});
+encodeAsciiRegisters('SunSpec', 8).forEach((word, index) => {
+  froniusSunspecCommonBlock[16 + index] = word;
+});
+encodeAsciiRegisters('1.28.7', 8).forEach((word, index) => {
+  froniusSunspecCommonBlock[24 + index] = word;
+});
+encodeAsciiRegisters('FGEN24A01234', 16).forEach((word, index) => {
+  froniusSunspecCommonBlock[32 + index] = word;
+});
+
+const froniusSunspecModel103Block = new Array<number>(50).fill(0);
+froniusSunspecModel103Block[0] = 191;
+froniusSunspecModel103Block[1] = 63;
+froniusSunspecModel103Block[2] = 65;
+froniusSunspecModel103Block[3] = 63;
+froniusSunspecModel103Block[4] = 0xffff;
+froniusSunspecModel103Block[5] = 3990;
+froniusSunspecModel103Block[6] = 4010;
+froniusSunspecModel103Block[7] = 4000;
+froniusSunspecModel103Block[8] = 2301;
+froniusSunspecModel103Block[9] = 2294;
+froniusSunspecModel103Block[10] = 2310;
+froniusSunspecModel103Block[11] = 0xffff;
+froniusSunspecModel103Block[12] = 4380;
+froniusSunspecModel103Block[13] = 0;
+froniusSunspecModel103Block[14] = 5000;
+froniusSunspecModel103Block[15] = 0xfffe;
+froniusSunspecModel103Block[16] = 4480;
+froniusSunspecModel103Block[17] = 0;
+froniusSunspecModel103Block[18] = 250;
+froniusSunspecModel103Block[19] = 0;
+froniusSunspecModel103Block[20] = 978;
+froniusSunspecModel103Block[21] = 0xfffd;
+froniusSunspecModel103Block[22] = 19;
+froniusSunspecModel103Block[23] = 9868;
+froniusSunspecModel103Block[24] = 0;
+froniusSunspecModel103Block[25] = 121;
+froniusSunspecModel103Block[26] = 0xffff;
+froniusSunspecModel103Block[27] = 620;
+froniusSunspecModel103Block[28] = 0;
+froniusSunspecModel103Block[29] = 4520;
+froniusSunspecModel103Block[30] = 0;
+froniusSunspecModel103Block[31] = 29;
+froniusSunspecModel103Block[32] = 0;
+froniusSunspecModel103Block[33] = 31;
+froniusSunspecModel103Block[34] = 0;
+froniusSunspecModel103Block[35] = 0;
+froniusSunspecModel103Block[36] = 0;
+froniusSunspecModel103Block[37] = 0;
+froniusSunspecModel103Block[38] = 4;
+
+const froniusSunspecRegisters: DeviceRegistersDefinition = {
+  holding: {
+    40000: { name: 'sunspec_id_0', type: 'uint16', value: 0x5375 },
+    40001: { name: 'sunspec_id_1', type: 'uint16', value: 0x6e53 },
+    40002: { name: 'common_model_id', type: 'uint16', value: 1 },
+    40003: { name: 'common_model_length', type: 'uint16', value: 66 },
+    ...createSequentialRegisters(40004, froniusSunspecCommonBlock, 'common'),
+    40070: { name: 'inverter_model_id', type: 'uint16', value: 103 },
+    40071: { name: 'inverter_model_length', type: 'uint16', value: 50 },
+    ...createSequentialRegisters(40072, froniusSunspecModel103Block, 'inv103'),
+    40122: { name: 'end_model_id', type: 'uint16', value: 0xffff },
+    40123: { name: 'end_model_length', type: 'uint16', value: 0 }
+  }
+};
+
 const builtinProfiles: DeviceProfileDefinition[] = [
+  {
+    id: 'fronius-sunspec',
+    title: 'Fronius SunSpec Inverter',
+    description:
+      'SunSpec Modbus TCP profile representing a Fronius GEN24 or Symo-style inverter with the standard SunSpec discovery chain starting at register 40000.',
+    manufacturerId: 'fronius',
+    manufacturerName: 'Fronius',
+    productId: 'fronius-sunspec',
+    productName: 'Fronius GEN24 / Symo (SunSpec)',
+    transport: 'modbus-tcp',
+    defaultPort: 502,
+    compatibility: 'vendor-compat',
+    notes: [
+      'The simulator exposes the SunSpec signature at holding registers 40000-40001.',
+      'A Common model (ID 1) is followed by inverter model 103, then an end marker at 40122.',
+      'The first implementation focuses on the public SunSpec int+SF fields needed for power, energy, phase voltage/current, frequency, and status.'
+    ],
+    device: {
+      kind: 'inverter',
+      model: 'Fronius SunSpec Inverter',
+      transport: 'modbus-tcp',
+      unitId: 1,
+      port: 502,
+      registers: cloneRegisters(froniusSunspecRegisters),
+      behaviors: [
+        {
+          id: 'fronius-phase-a-current',
+          type: 'randomWalk',
+          bank: 'holding',
+          address: 40073,
+          min: 55,
+          max: 78,
+          step: 2,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-phase-b-current',
+          type: 'randomWalk',
+          bank: 'holding',
+          address: 40074,
+          min: 58,
+          max: 81,
+          step: 2,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-phase-c-current',
+          type: 'randomWalk',
+          bank: 'holding',
+          address: 40075,
+          min: 54,
+          max: 77,
+          step: 2,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-total-power',
+          type: 'randomWalk',
+          bank: 'holding',
+          address: 40084,
+          min: 3600,
+          max: 5200,
+          step: 70,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-phase-a-voltage',
+          type: 'sineWave',
+          bank: 'holding',
+          address: 40080,
+          min: 2288,
+          max: 2312,
+          periodMs: 12000,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-phase-b-voltage',
+          type: 'sineWave',
+          bank: 'holding',
+          address: 40081,
+          min: 2286,
+          max: 2309,
+          periodMs: 14000,
+          intervalMs: 2000
+        },
+        {
+          id: 'fronius-phase-c-voltage',
+          type: 'sineWave',
+          bank: 'holding',
+          address: 40082,
+          min: 2290,
+          max: 2315,
+          periodMs: 16000,
+          intervalMs: 2000
+        }
+      ]
+    }
+  },
   {
     id: 'iammeter-wem3080t',
     title: 'IAMMETER WEM3080T',
@@ -240,7 +441,9 @@ const builtinProfiles: DeviceProfileDefinition[] = [
 ];
 
 const builtinProfileAliases = new Map<string, string>([
-  ['iammeter-wem3080', 'iammeter-wem3080t']
+  ['iammeter-wem3080', 'iammeter-wem3080t'],
+  ['fronius-gen24', 'fronius-sunspec'],
+  ['fronius', 'fronius-sunspec']
 ]);
 
 const builtinProfilesById = new Map<string, DeviceProfileDefinition>(

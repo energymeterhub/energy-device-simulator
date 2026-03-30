@@ -1,7 +1,7 @@
 {
   "name": "energy-device-simulator",
   "version": "0.4.0",
-  "description": "Protocol-focused simulator for IAMMETER WEM3080T Modbus TCP and Shelly Pro 3EM RPC HTTP output.",
+  "description": "Protocol-focused simulator for IAMMETER WEM3080T, Fronius SunSpec, and Shelly Pro 3EM output.",
   "license": "MIT",
   "keywords": [
     "energy",
@@ -23,6 +23,7 @@
     "start": "node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
     "start:iammeter": "node --experimental-strip-types src/cli.ts start iammeter-wem3080t",
     "start:iammeter:dev": "node --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
+    "start:fronius": "node --experimental-strip-types src/cli.ts start fronius-sunspec",
     "start:shelly": "node --experimental-strip-types src/cli.ts start shelly-3em",
     "read:meter": "node --experimental-strip-types src/cli.ts read-meter",
     "dev": "node --watch --experimental-strip-types src/cli.ts start examples/devices/iammeter-wem3080t.dev.json",
@@ -31,6 +32,7 @@
     "validate": "node --experimental-strip-types src/cli.ts validate",
     "validate:iammeter": "node --experimental-strip-types src/cli.ts validate iammeter-wem3080t",
     "validate:iammeter:dev": "node --experimental-strip-types src/cli.ts validate examples/devices/iammeter-wem3080t.dev.json",
+    "validate:fronius": "node --experimental-strip-types src/cli.ts validate fronius-sunspec",
     "validate:shelly": "node --experimental-strip-types src/cli.ts validate shelly-3em"
   },
   "engines": {

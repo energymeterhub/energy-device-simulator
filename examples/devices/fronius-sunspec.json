@@ -1,0 +1,10 @@
+{
+  "scenarios": [],
+  "device": {
+    "id": "fronius-sunspec-1",
+    "profile": "fronius-sunspec",
+    "name": "Fronius SunSpec Inverter",
+    "host": "0.0.0.0",
+    "port": 1503
+  }
+}

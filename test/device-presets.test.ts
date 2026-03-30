@@ -35,6 +35,7 @@ test('the remaining device preset config loads exactly one device with a 2 secon
     .sort();
 
   assert.deepEqual(filenames, [
+    'fronius-sunspec.json',
     'iammeter-wem3080t.dev.json',
     'iammeter-wem3080t.json',
     'shelly-3em.json'

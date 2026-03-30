@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { SimulatorApp } from '../src/app/simulator-app.ts';
+import { getBuiltinProfile } from '../src/profiles/builtin.ts';
 import { sendModbusRequest } from './helpers/modbus-client.ts';
 
 function buildReadPayload(startAddress: number, quantity: number): Buffer {
@@ -460,4 +461,61 @@ test('simulator app persists the selected profile across restarts', async (t) =>
   assert.equal(restoredDevice?.transport, 'shelly-rpc-http');
   assert.notEqual(restoredDevice?.configuredPort, switchedPort);
   assert.equal(restoredDevice?.configuredPort, 18080);
+});
+
+test('simulator app exposes Fronius SunSpec protocol preview sections', async (t) => {
+  const profile = getBuiltinProfile('fronius-sunspec');
+  assert.ok(profile);
+
+  const app = SimulatorApp.fromConfig({
+    behaviorTickMs: 2000,
+    controlApi: {
+      enabled: true,
+      host: '127.0.0.1',
+      port: 0
+    },
+    scenarios: [],
+    activeScenarioId: null,
+    devices: [
+      {
+        id: 'fronius-1',
+        profileId: 'fronius-sunspec',
+        profile: 'fronius-sunspec',
+        name: 'Fronius SunSpec Inverter',
+        kind: 'inverter',
+        model: 'Fronius SunSpec Inverter',
+        transport: 'modbus-tcp',
+        host: '127.0.0.1',
+        port: 0,
+        unitId: 1,
+        behaviors: [],
+        registers: profile.device.registers ?? {}
+      }
+    ]
+  });
+
+  await app.start();
+  t.after(async () => {
+    await app.stop();
+  });
+
+  const controlAddress = app.getControlApiAddress();
+  assert.ok(controlAddress);
+
+  const dashboardResponse = await fetch(`http://127.0.0.1:${controlAddress.port}/api/dashboard`);
+  assert.equal(dashboardResponse.status, 200);
+  const dashboardBody = (await dashboardResponse.json()) as {
+    protocolPreview: { title: string; sections: Array<{ id: string }> } | null;
+  };
+
+  assert.equal(dashboardBody.protocolPreview?.title, 'Modbus TCP Output');
+  assert.ok(
+    dashboardBody.protocolPreview?.sections.some((section) => section.id === 'sunspec-signature')
+  );
+  assert.ok(
+    dashboardBody.protocolPreview?.sections.some((section) => section.id === 'sunspec-common')
+  );
+  assert.ok(
+    dashboardBody.protocolPreview?.sections.some((section) => section.id === 'sunspec-inverter-103')
+  );
 });

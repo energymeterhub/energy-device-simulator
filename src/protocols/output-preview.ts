@@ -81,8 +81,65 @@ function buildModbusPreview(
   });
   const host = resolveDemoHost(device);
   const baseCommand = `node --experimental-strip-types src/cli.ts read-meter --host ${host} --port ${device.listenPort} --unit ${device.unitId} --profile ${profile.id}`;
-  const registerSections: ProtocolPreviewSection[] = [
-    {
+  const registerSections: ProtocolPreviewSection[] = [];
+  let debugLines: string[] = [baseCommand];
+  let debugHints: string[] = [baseCommand];
+
+  if (profile.id === 'fronius-sunspec' || device.profileId === 'fronius-sunspec') {
+    const signatureWords = tryReadRange(device, 'holding', 40000, 2);
+    const commonWords = tryReadRange(device, 'holding', 40002, 68);
+    const inverterWords = tryReadRange(device, 'holding', 40070, 52);
+
+    registerSections.push(
+      {
+        id: 'sunspec-signature',
+        title: 'SunSpec Signature 40000-40001',
+        description: 'Discovery starts with the SunSpec magic value at holding registers 40000-40001.',
+        kind: 'register-block',
+        bank: 'holding',
+        functionCode: 0x03,
+        startAddress: 40000,
+        quantity: 2,
+        words: signatureWords
+      },
+      {
+        id: 'sunspec-common',
+        title: 'Common Model 40002-40069',
+        description: 'Model 1 metadata block with manufacturer, model, firmware, and serial details.',
+        kind: 'register-block',
+        bank: 'holding',
+        functionCode: 0x03,
+        startAddress: 40002,
+        quantity: 68,
+        words: commonWords
+      },
+      {
+        id: 'sunspec-inverter-103',
+        title: 'Inverter Model 103 40070-40121',
+        description: 'Three-phase inverter block with AC current, voltage, power, frequency, energy, and status.',
+        kind: 'register-block',
+        bank: 'holding',
+        functionCode: 0x03,
+        startAddress: 40070,
+        quantity: 52,
+        words: inverterWords
+      }
+    );
+
+    debugLines = [
+      baseCommand,
+      `Read FC03 holding 40000-40001 from ${host}:${device.listenPort} unit ${device.unitId}`,
+      `Read FC03 holding 40002-40069 from ${host}:${device.listenPort} unit ${device.unitId}`,
+      `Read FC03 holding 40070-40121 from ${host}:${device.listenPort} unit ${device.unitId}`
+    ];
+    debugHints = [
+      baseCommand,
+      `FC03 holding 40000-40001 on ${host}:${device.listenPort} unit ${device.unitId}`,
+      `FC03 holding 40002-40069 on ${host}:${device.listenPort}`,
+      `FC03 holding 40070-40121 on ${host}:${device.listenPort}`
+    ];
+  } else {
+    registerSections.push({
       id: 'holding-0-37',
       title: 'Holding Registers 0-37',
       description: 'Main contiguous block typically used by gateway and reader integrations.',
@@ -92,22 +149,35 @@ function buildModbusPreview(
       startAddress: 0,
       quantity: 38,
       words: tryReadRange(device, 'holding', 0, 38)
-    }
-  ];
-
-  const extendedWords = tryReadRange(device, 'holding', 38, 27);
-  if (extendedWords.length > 0) {
-    registerSections.push({
-      id: 'holding-38-64',
-      title: 'Holding Registers 38-64',
-      description: 'Extended reactive energy and device metadata block.',
-      kind: 'register-block',
-      bank: 'holding',
-      functionCode: 0x03,
-      startAddress: 38,
-      quantity: 27,
-      words: extendedWords
     });
+
+    const extendedWords = tryReadRange(device, 'holding', 38, 27);
+    if (extendedWords.length > 0) {
+      registerSections.push({
+        id: 'holding-38-64',
+        title: 'Holding Registers 38-64',
+        description: 'Extended reactive energy and device metadata block.',
+        kind: 'register-block',
+        bank: 'holding',
+        functionCode: 0x03,
+        startAddress: 38,
+        quantity: 27,
+        words: extendedWords
+      });
+    }
+
+    debugLines = [
+      baseCommand,
+      `Read FC03 holding 0-37 from ${host}:${device.listenPort} unit ${device.unitId}`,
+      extendedWords.length > 0
+        ? `Read FC03 holding 38-64 from ${host}:${device.listenPort} unit ${device.unitId}`
+        : `No extended holding block is exposed by this profile`
+    ];
+    debugHints = [
+      baseCommand,
+      `FC03 holding 0-37 on ${host}:${device.listenPort} unit ${device.unitId}`,
+      extendedWords.length > 0 ? `FC03 holding 38-64 on ${host}:${device.listenPort}` : 'No extended holding block'
+    ];
   }
 
   return {
@@ -129,20 +199,10 @@ function buildModbusPreview(
         title: 'Console Debug',
         description: 'Use these commands when you want to validate the Modbus output from a terminal.',
         kind: 'text',
-        lines: [
-          baseCommand,
-          `Read FC03 holding 0-37 from ${host}:${device.listenPort} unit ${device.unitId}`,
-          extendedWords.length > 0
-            ? `Read FC03 holding 38-64 from ${host}:${device.listenPort} unit ${device.unitId}`
-            : `No extended holding block is exposed by this profile`
-        ]
+        lines: debugLines
       }
     ],
-    debugHints: [
-      baseCommand,
-      `FC03 holding 0-37 on ${host}:${device.listenPort} unit ${device.unitId}`,
-      extendedWords.length > 0 ? `FC03 holding 38-64 on ${host}:${device.listenPort}` : 'No extended holding block'
-    ]
+    debugHints
   };
 }
 

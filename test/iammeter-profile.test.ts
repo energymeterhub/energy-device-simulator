@@ -57,3 +57,52 @@ test('iammeter-wem3080t profile changes raw power values on a 2 second interval'
   assert.equal(device.getEntryValue('holding', 2), beforePhaseA + 120);
   assert.equal(device.getEntryValue('holding', 32), beforeTotal + 180);
 });
+
+test('fronius-sunspec profile exposes the SunSpec discovery chain starting at holding 40000', () => {
+  const profile = getBuiltinProfile('fronius-sunspec');
+  assert.ok(profile);
+
+  const bank = new RegisterBank(profile.device.registers);
+  const signature = bank.readRange('holding', 40000, 2);
+  const commonHeader = bank.readRange('holding', 40002, 2);
+  const inverterHeader = bank.readRange('holding', 40070, 2);
+  const endMarker = bank.readRange('holding', 40122, 2);
+
+  assert.deepEqual(signature, [0x5375, 0x6e53]);
+  assert.deepEqual(commonHeader, [1, 66]);
+  assert.deepEqual(inverterHeader, [103, 50]);
+  assert.deepEqual(endMarker, [0xffff, 0]);
+
+  assert.equal(bank.getEntryValue('holding', 40084), 4380);
+  assert.equal(bank.getEntryValue('holding', 40086), 5000);
+  assert.equal(bank.getEntryValue('holding', 40110), 4);
+});
+
+test('fronius-sunspec profile changes current and power values on a 2 second interval', () => {
+  const profile = getBuiltinProfile('fronius-sunspec');
+  assert.ok(profile);
+
+  const device = new DeviceRuntime({
+    id: 'fronius-1',
+    ...profile.device
+  });
+  const engine = new BehaviorEngine([device], {
+    tickMs: 2000,
+    random: () => 0.75
+  });
+
+  const beforePhaseA = device.getEntryValue('holding', 40073);
+  const beforeTotal = device.getEntryValue('holding', 40084);
+
+  engine.tick(0);
+  assert.equal(device.getEntryValue('holding', 40073), beforePhaseA + 2);
+  assert.equal(device.getEntryValue('holding', 40084), beforeTotal + 70);
+
+  engine.tick(1000);
+  assert.equal(device.getEntryValue('holding', 40073), beforePhaseA + 2);
+  assert.equal(device.getEntryValue('holding', 40084), beforeTotal + 70);
+
+  engine.tick(2000);
+  assert.equal(device.getEntryValue('holding', 40073), beforePhaseA + 4);
+  assert.equal(device.getEntryValue('holding', 40084), beforeTotal + 140);
+});
