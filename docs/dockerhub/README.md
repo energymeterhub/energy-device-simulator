@@ -1,6 +1,8 @@
 # Energy Device Simulator
 
-Run a local IAMMETER, Fronius SunSpec, or Shelly protocol simulator in Docker for integration testing and demos.
+An open-source simulator from [EnergyMeterHub](https://www.energymeterhub.com) for local energy-device integration testing in Docker.
+
+The current image includes IAMMETER, Fronius SunSpec, and Shelly profiles, and the project is designed to grow into a larger library of meter, inverter, gateway, and energy-device protocol simulators.
 
 ## Quick Start
 
@@ -13,6 +15,8 @@ docker run --rm -p 1502:1502 -p 5092:5092 energymeterhub/energy-device-simulator
 Open `http://127.0.0.1:5092/` for the control UI.
 
 ## Other Profiles
+
+Today the image ships with a few built-in profiles, but it is not limited to only these three devices.
 
 Fronius SunSpec:
 
@@ -40,5 +44,6 @@ docker run --rm -p 18080:18080 -p 5092:5092 energymeterhub/energy-device-simulat
 
 ## Source
 
+- EnergyMeterHub: https://www.energymeterhub.com
 - GitHub: https://github.com/energymeterhub/energy-device-simulator
 - npm: https://www.npmjs.com/package/energy-device-simulator

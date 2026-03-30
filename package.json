@@ -1,7 +1,7 @@
 {
   "name": "energy-device-simulator",
-  "version": "0.4.0",
-  "description": "Protocol-focused simulator for IAMMETER WEM3080T, Fronius SunSpec, and Shelly Pro 3EM output.",
+  "version": "0.4.1",
+  "description": "Energy device simulator for meter, inverter, and gateway integration testing.",
   "license": "MIT",
   "keywords": [
     "energy",

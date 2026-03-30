@@ -104,4 +104,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: energymeterhub/energy-device-simulator
+          short-description: Energy device simulator by EnergyMeterHub for meter, inverter, and gateway integration testing.
           readme-filepath: ./docs/dockerhub/README.md

@@ -97,6 +97,8 @@ The Docker image uses [`examples/system/docker.json`](examples/system/docker.jso
 
 Container images are published to Docker Hub at `energymeterhub/energy-device-simulator`.
 
+The published image currently includes IAMMETER, Fronius SunSpec, and Shelly built-ins, but the project is intended to expand into a broader catalog of energy-device simulators over time.
+
 ## Release Automation
 
 GitHub Actions now publishes npm and Docker Hub releases whenever you push a version tag such as `v0.4.1`.
